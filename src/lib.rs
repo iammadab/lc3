@@ -146,6 +146,8 @@ fn update_flags(vm: &mut VM, register_addr: u16) {
     *vm.reg_mut(Register::COND.into()) = cond_state.into();
 }
 
+/// For opcode specification see: https://icourse.club/uploads/files/a9710bf2454961912f79d89b25ba33c4841f6c24.pdf
+
 fn add(vm: &mut VM, instruction: u16) {
     let dr = (instruction >> 9) & 0b111;
     let sr1 = (instruction >> 6) & 0b111;
@@ -161,8 +163,6 @@ fn add(vm: &mut VM, instruction: u16) {
 
     update_flags(vm, dr);
 }
-
-// TODO: add documentation
 
 #[cfg(test)]
 mod tests {
