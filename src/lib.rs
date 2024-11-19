@@ -94,12 +94,28 @@ impl VM {
 
 #[cfg(test)]
 mod tests {
-    use crate::Registers;
+    use crate::{Registers, VM};
 
     #[test]
     fn test_register_implicit_ordering() {
         assert_eq!(Registers::R0 as usize, 0);
         assert_eq!(Registers::R3 as usize, 3);
         assert_eq!(Registers::PC as usize, 8);
+    }
+
+    #[test]
+    fn test_vm_manipulation() {
+        let mut vm = VM::init();
+        assert_eq!(vm.read_mem(0), 0);
+        assert_eq!(vm.read_register(Registers::PC as usize), 0);
+        assert_eq!(vm.read_register(Registers::R0 as usize), 0);
+
+        vm.write_register(Registers::PC as usize, 15);
+        vm.write_mem(0, 16);
+        vm.write_register(Registers::PC as usize, 30);
+
+        assert_eq!(vm.read_mem(0), 16);
+        assert_eq!(vm.read_register(Registers::PC as usize), 30);
+        assert_eq!(vm.read_register(Registers::R0 as usize), 0);
     }
 }
