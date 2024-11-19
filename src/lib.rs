@@ -59,12 +59,22 @@ enum Flags {
     NEG = 1 << 2,
 }
 
+const MEMORY_SIZE: usize = 1 << 16;
+const REGISTER_COUNT: usize = 10;
+
 struct VM {
-    memory: [u16; 1 << 16],
-    registers: [u16; 10],
+    memory: [u16; MEMORY_SIZE],
+    registers: [u16; REGISTER_COUNT],
 }
 
 impl VM {
+    fn init() -> Self {
+        VM {
+            memory: [0; MEMORY_SIZE],
+            registers: [0; REGISTER_COUNT],
+        }
+    }
+
     fn read_mem(&self, addr: usize) -> u16 {
         self.memory[addr]
     }
