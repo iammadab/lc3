@@ -17,6 +17,12 @@ enum Registers {
     COND,
 }
 
+impl From<Registers> for u16 {
+    fn from(value: Registers) -> Self {
+        value as u16
+    }
+}
+
 /// Opcodes
 enum Opcodes {
     // branch
@@ -60,6 +66,12 @@ enum Flags {
     NEG = 1 << 2,
 }
 
+impl From<Flags> for u16 {
+    fn from(value: Flags) -> Self {
+        value as u16
+    }
+}
+
 const MEMORY_SIZE: usize = 1 << 16;
 const REGISTER_COUNT: usize = 10;
 
@@ -76,20 +88,12 @@ impl VM {
         }
     }
 
-    fn read_mem(&self, addr: usize) -> u16 {
-        self.memory[addr]
+    fn reg(&self, addr: u16) -> u16 {
+        self.registers[addr as usize]
     }
 
-    fn write_mem(&mut self, addr: usize, val: u16) {
-        self.memory[addr] = val;
-    }
-
-    fn read_register(&self, addr: usize) -> u16 {
-        self.registers[addr]
-    }
-
-    fn write_register(&mut self, addr: usize, val: u16) {
-        self.registers[addr] = val;
+    fn reg_mut(&mut self, addr: u16) -> &mut u16 {
+        &mut self.registers[addr as usize]
     }
 }
 
@@ -115,8 +119,8 @@ fn sext(val: u16, bit_count: usize) -> u16 {
 }
 
 /// Update Registers::COND based on the value at some register address
-fn update_flags(vm: &mut VM, register_addr: usize) {
-    let register_value = vm.read_register(register_addr);
+fn update_flags(vm: &mut VM, register_addr: u16) {
+    let register_value = vm.reg(register_addr);
     let cond_state = if register_value == 0 {
         Flags::ZERO
     } else if register_value >> 15 == 1 {
@@ -124,25 +128,24 @@ fn update_flags(vm: &mut VM, register_addr: usize) {
     } else {
         Flags::POSITIVE
     };
-    vm.write_register(Registers::COND as usize, cond_state as u16);
+
+    *vm.reg_mut(Registers::COND.into()) = cond_state.into();
 }
 
 fn add(vm: &mut VM, instruction: u16) {
-    let destination_register = (instruction >> 9) & 0b111;
-    let source_register_1 = (instruction >> 6) & 0b111;
-    let source_value = vm.read_register(source_register_1 as usize);
+    let dr = (instruction >> 9) & 0b111;
+    let sr1 = (instruction >> 6) & 0b111;
     let imm_flag = (instruction >> 5) & 0b1;
 
     if imm_flag == 1 {
         let imm5 = sext(instruction & 0b11111, 5);
-        vm.write_register(destination_register as usize, source_value + imm5);
+        *vm.reg_mut(dr) = vm.reg(sr1) + imm5;
     } else {
-        let source_register_2 = instruction & 0b111;
-        let source2_value = vm.read_register(source_register_2 as usize);
-        vm.write_register(destination_register as usize, source_value + source2_value);
+        let sr2 = instruction & 0b111;
+        *vm.reg_mut(dr) = vm.reg(sr1) + vm.reg(sr2);
     }
 
-    update_flags(vm, destination_register as usize);
+    update_flags(vm, dr);
 }
 
 #[cfg(test)]
