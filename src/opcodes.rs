@@ -175,6 +175,7 @@ fn trap_puts(vm: &mut VM) {
         print!("{}", data as u8 as char);
         mem_addr += 1;
     }
+    std::io::stdout().flush().unwrap();
 }
 
 fn trap_in(vm: &mut VM) {
@@ -188,8 +189,18 @@ fn trap_in(vm: &mut VM) {
         .unwrap();
 }
 
+/// Same as trap_puts but assumes two characters per word
 fn trap_putsp(vm: &mut VM) {
-    todo!()
+    let mut mem_addr = vm.reg(Register::R0.into());
+    while mem_addr < MEMORY_SIZE as u16 {
+        let data = vm.mem(mem_addr);
+        let first_half = data & mask(8);
+        let second_half = data >> 8;
+
+        print!("{}{}", first_half as u8 as char, second_half as u8 as char);
+        mem_addr += 1;
+    }
+    std::io::stdout().flush().unwrap();
 }
 
 fn trap_halt(vm: &mut VM) {
