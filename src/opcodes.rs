@@ -128,6 +128,21 @@ fn jmp_opcodee(vm: &mut VM, instruction: u16) {
     *vm.reg_mut(Register::PC.into()) = vm.reg(base);
 }
 
+// TODO: add documentation
+fn jsr_opcode(vm: &mut VM, instruction: u16) {
+    *vm.reg_mut(Register::R7.into()) = vm.reg(Register::PC.into());
+    let mode = (instruction >> 11) & mask(1);
+    if mode == 1 {
+        // JSR
+        let pc_offset = sext(instruction & mask(11), 11);
+        *vm.reg_mut(Register::PC.into()) += pc_offset;
+    } else {
+        // JSSR
+        let base = (instruction >> 6) & mask(3);
+        *vm.reg_mut(Register::PC.into()) = vm.reg(base);
+    }
+}
+
 fn mask(n: u8) -> u16 {
     (1 << n) - 1
 }
