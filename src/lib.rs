@@ -1,6 +1,7 @@
 /// Register Enum for readable reference
 /// 10 registers in total
 /// 8 general purpose registers (R0 - R7)
+///   - the general purpose registers can be addressed with 3 bits (log_2(8))
 /// 1 program counter (PC)
 /// 1 condition flag (COND)
 enum Registers {
@@ -90,6 +91,27 @@ impl VM {
     fn write_register(&mut self, addr: usize, val: u16) {
         self.registers[addr] = val;
     }
+}
+
+/// Sign Extension
+/// extends a binary value of a certain bit count to a larger bit count (u16 in this case)
+fn sext(val: u16, bit_count: usize) -> u16 {
+    // if the sign bit is 1, add 1's to the most significant part of the number
+    // NOTE: this does not change the 2's complement meaning
+
+    // bit_count represent the original length of the sequence
+    // right shift to erase all element other than first (bit_count - 1)
+    let sign_bit = val >> (bit_count - 1);
+
+    // if sign bit is a 1 (negative in 2's complement representation)
+    // pad most significant side with 1's
+    if sign_bit & 1 {
+        // left shift by bit_count to prevent corruption of original bit values
+        return val | (0xffff << bit_count);
+    }
+
+    // if not already padded with 0's just return
+    val
 }
 
 #[cfg(test)]
