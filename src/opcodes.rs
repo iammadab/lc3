@@ -41,7 +41,7 @@ fn mask(n: u8) -> u16 {
 
 #[cfg(test)]
 mod tests {
-    use crate::opcodes::{add_opcode, mask};
+    use crate::opcodes::{add_opcode, ldi_opcode, mask};
     use crate::{Opcode, Register, VM};
 
     // (instr_value, instr_bit_count)
@@ -126,6 +126,27 @@ mod tests {
 
     #[test]
     fn test_ldi_opcode() {
-        todo!()
+        // goal is to read from mem_addr = 5
+        // will put that address in mem_addr = 10
+        // so immediate must be 10 - pc
+
+        // init vm
+        let mut vm = VM::init();
+        *vm.mem_mut(5) = 42; // value that should be in dr
+        *vm.mem_mut(10) = 5;
+        // set PC
+        *vm.reg_mut(Register::PC.into()) = 2;
+        // since pc = 2 then imm5 = 8
+
+        // LDI R2, 8
+        let instr = encode_instruction(vec![
+            encode_opcode(Opcode::LDI),
+            encode_register(Register::R2),
+            (8, 9),
+        ]);
+
+        assert_eq!(vm.reg(Register::R2.into()), 0);
+        ldi_opcode(&mut vm, instr);
+        assert_eq!(vm.reg(Register::R2.into()), 42);
     }
 }
