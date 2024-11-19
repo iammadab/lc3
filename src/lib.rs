@@ -64,6 +64,24 @@ struct VM {
     registers: [u16; 10],
 }
 
+impl VM {
+    fn read_mem(&self, addr: usize) -> u16 {
+        self.memory[addr]
+    }
+
+    fn write_mem(&mut self, addr: usize, val: u16) {
+        self.memory[addr] = val;
+    }
+
+    fn read_register(&self, addr: usize) -> u16 {
+        self.registers[addr]
+    }
+
+    fn write_register(&mut self, addr: usize, val: u16) {
+        self.registers[addr] = val;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::Registers;
