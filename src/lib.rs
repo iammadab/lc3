@@ -15,6 +15,50 @@ enum Registers {
     PC,
     COND,
 }
+
+/// Opcodes
+enum Opcodes {
+    // branch
+    BR,
+    // add
+    ADD,
+    // load
+    LD,
+    // store
+    ST,
+    // jump register
+    JSR,
+    // bitwise and
+    AND,
+    // load register
+    LDR,
+    // store register
+    STR,
+    // unused
+    RTI,
+    // bitwise not
+    NOT,
+    // load indirect
+    LDI,
+    // store indirect
+    STI,
+    // jump
+    JMP,
+    // reserved (unused)
+    RES,
+    // load effective address
+    LEA,
+    // execute trap
+    TRAP,
+}
+
+/// Conditional Flags
+enum Flags {
+    POSITIVE = 1 << 0,
+    ZERO = 1 << 1,
+    NEG = 1 << 2,
+}
+
 struct VM {
     memory: [u16; 1 << 16],
     registers: [u16; 10],
