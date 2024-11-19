@@ -122,6 +122,12 @@ fn not_opcode(vm: &mut VM, instruction: u16) {
     update_flags(vm, dr);
 }
 
+// TODO: add documentation
+fn jmp_opcodee(vm: &mut VM, instruction: u16) {
+    let base = (instruction >> 6) & mask(3);
+    *vm.reg_mut(Register::PC.into()) = vm.reg(base);
+}
+
 fn mask(n: u8) -> u16 {
     (1 << n) - 1
 }
