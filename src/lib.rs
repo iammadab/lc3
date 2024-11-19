@@ -1,3 +1,8 @@
+/// Register Enum for readable reference
+/// 10 registers in total
+/// 8 general purpose registers (R0 - R7)
+/// 1 program counter (PC)
+/// 1 condition flag (COND)
 enum Registers {
     R0,
     R1,
@@ -9,11 +14,10 @@ enum Registers {
     R7,
     PC,
     COND,
-    COUNT
 }
 struct VM {
     memory: [u16; 1 << 16],
-    registers: [u16; 10]
+    registers: [u16; 10],
 }
 
 #[cfg(test)]
