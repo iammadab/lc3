@@ -1,4 +1,5 @@
 use crate::{sext, update_flags, Flags, Register, VM};
+use std::io::Read;
 
 /// For complete opcode specification
 /// see: https://icourse.club/uploads/files/a9710bf2454961912f79d89b25ba33c4841f6c24.pdf
@@ -141,6 +142,18 @@ fn jsr_opcode(vm: &mut VM, instruction: u16) {
         let base = (instruction >> 6) & mask(3);
         *vm.reg_mut(Register::PC.into()) = vm.reg(base);
     }
+}
+
+fn trap_opcode(vm: &mut VM, instruction: u16) {
+    let trap_code = instruction & mask(8);
+    todo!();
+}
+
+fn trap_get_c(vm: &mut VM) {
+    let mut buffer = [0, 1];
+    std::io::stdin().read_exact(&mut buffer).unwrap();
+    *vm.reg_mut(Register::R0.into()) = buffer[0] as u16;
+    update_flags(vm, Register::R0.into());
 }
 
 fn mask(n: u8) -> u16 {
