@@ -114,6 +114,14 @@ fn and_opcode(vm: &mut VM, instruction: u16) {
     update_flags(vm, dr);
 }
 
+// TODO: add documentation
+fn not_opcode(vm: &mut VM, instruction: u16) {
+    let dr = (instruction >> 9) & mask(3);
+    let sr = (instruction >> 6) & mask(3);
+    *vm.reg_mut(dr) = !sr;
+    update_flags(vm, dr);
+}
+
 fn mask(n: u8) -> u16 {
     (1 << n) - 1
 }
