@@ -127,6 +127,24 @@ fn update_flags(vm: &mut VM, register_addr: usize) {
     vm.write_register(Registers::COND as usize, cond_state as u16);
 }
 
+fn add(vm: &mut VM, instruction: u16) {
+    let destination_register = (instruction >> 9) & 0b111;
+    let source_register_1 = (instruction >> 6) & 0b111;
+    let source_value = vm.read_register(source_register_1 as usize);
+    let imm_flag = (instruction >> 5) & 0b1;
+
+    if imm_flag == 1 {
+        let imm5 = sext(instruction & 0b11111, 5);
+        vm.write_register(destination_register as usize, source_value + imm5);
+    } else {
+        let source_register_2 = instruction & 0b111;
+        let source2_value = vm.read_register(source_register_2 as usize);
+        vm.write_register(destination_register as usize, source_value + source2_value);
+    }
+
+    update_flags(vm, destination_register as usize);
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{sext, Registers, VM};
