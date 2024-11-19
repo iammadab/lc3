@@ -47,6 +47,14 @@ fn br_opcode(vm: &mut VM, instruction: u16) {
     }
 }
 
+// TODO: add documentation
+fn ld_opcode(vm: &mut VM, instruction: u16) {
+    let dr = (instruction >> 9) & mask(3);
+    let pc_offset = sext(instruction & mask(9), 9);
+    *vm.reg_mut(dr) = vm.mem(pc_offset + vm.reg(Register::PC.into()));
+    update_flags(vm, dr);
+}
+
 fn mask(n: u8) -> u16 {
     (1 << n) - 1
 }
