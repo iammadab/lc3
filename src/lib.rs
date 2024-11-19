@@ -148,25 +148,37 @@ fn update_flags(vm: &mut VM, register_addr: u16) {
 
 /// For opcode specification see: https://icourse.club/uploads/files/a9710bf2454961912f79d89b25ba33c4841f6c24.pdf
 
+fn mask(n: u8) -> u16 {
+    (1 << n) - 1
+}
+
 fn add(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & 0b111;
-    let sr1 = (instruction >> 6) & 0b111;
-    let imm_flag = (instruction >> 5) & 0b1;
+    let dr = (instruction >> 9) & mask(3);
+    let sr1 = (instruction >> 6) & mask(3);
+    let imm_flag = (instruction >> 5) & mask(1);
 
     if imm_flag == 1 {
-        let imm5 = sext(instruction & 0b11111, 5);
+        let imm5 = sext(instruction & mask(5), 5);
         *vm.reg_mut(dr) = vm.reg(sr1) + imm5;
     } else {
-        let sr2 = instruction & 0b111;
+        let sr2 = instruction & mask(3);
         *vm.reg_mut(dr) = vm.reg(sr1) + vm.reg(sr2);
     }
 
     update_flags(vm, dr);
 }
 
+fn ldi(vm: &mut VM, instruction: u16) {
+    let dr = (instruction >> 9) & mask(3);
+    let pc_offset = sext(instruction & mask(9), 9);
+    let mem_addr = pc_offset + vm.reg(Register::PC.into());
+    *vm.reg_mut(dr) = vm.mem(mem_addr);
+    update_flags(vm, dr);
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{add, sext, Opcode, Register, VM};
+    use crate::{add, mask, sext, Opcode, Register, VM};
 
     // (instr_value, instr_bit_count)
     type InstructionPart = (u16, u8);
@@ -178,8 +190,7 @@ mod tests {
         let mut pad_count = 0;
         let mut instruction = 0;
         for (mut instr_part, instr_size) in instr_parts.into_iter().rev() {
-            let mask = (1 << instr_size) - 1;
-            instr_part &= mask;
+            instr_part &= mask(instr_size);
             instruction += instr_part << pad_count;
             pad_count += instr_size;
         }
