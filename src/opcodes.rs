@@ -71,6 +71,15 @@ fn sti_opcode(vm: &mut VM, instruction: u16) {
 }
 
 // TODO: add documentation
+fn str_opcode(vm: &mut VM, instruction: u16) {
+    let sr = (instruction >> 9) & mask(3);
+    let base = (instruction >> 6) & mask(3);
+    let base_offset = sext(instruction & mask(6), 6);
+    let mem_addr = base + base_offset;
+    *vm.mem_mut(mem_addr) = vm.reg(sr);
+}
+
+// TODO: add documentation
 fn and_opcode(vm: &mut VM, instruction: u16) {
     let dr = (instruction >> 9) & mask(3);
     let sr1 = (instruction >> 6) & mask(3);
