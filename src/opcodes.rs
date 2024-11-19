@@ -1,4 +1,4 @@
-use crate::{sext, update_flags, Register, VM};
+use crate::{sext, update_flags, Flags, Register, VM};
 
 /// For complete opcode specification
 /// see: https://icourse.club/uploads/files/a9710bf2454961912f79d89b25ba33c4841f6c24.pdf
@@ -33,6 +33,23 @@ fn ldi_opcode(vm: &mut VM, instruction: u16) {
     let pointer_addr = pc_offset + vm.reg(Register::PC.into());
     *vm.reg_mut(dr) = vm.mem(vm.mem(pointer_addr));
     update_flags(vm, dr);
+}
+
+// TODO: add documentation
+fn br_opcode(vm: &mut VM, instruction: u16) {
+    let check_n = ((instruction >> 11) & mask(1)) == 1;
+    let check_z = ((instruction >> 10) & mask(1)) == 1;
+    let check_p = ((instruction >> 9) & mask(1)) == 1;
+    let pc_offset = sext(instruction & mask(9), 9);
+
+    let cond_state = vm.reg(Register::COND.into());
+
+    if (check_n && cond_state == Flags::NEG.into())
+        || (check_p && cond_state == Flags::POSITIVE.into())
+        || (check_z && cond_state == Flags::ZERO.into())
+    {
+        *vm.reg_mut(Register::PC.into()) += pc_offset;
+    }
 }
 
 fn mask(n: u8) -> u16 {
