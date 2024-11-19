@@ -59,19 +59,63 @@ enum Flags {
     NEG = 1 << 2,
 }
 
+const MEMORY_SIZE: usize = 1 << 16;
+const REGISTER_COUNT: usize = 10;
+
 struct VM {
-    memory: [u16; 1 << 16],
-    registers: [u16; 10],
+    memory: [u16; MEMORY_SIZE],
+    registers: [u16; REGISTER_COUNT],
+}
+
+impl VM {
+    fn init() -> Self {
+        VM {
+            memory: [0; MEMORY_SIZE],
+            registers: [0; REGISTER_COUNT],
+        }
+    }
+
+    fn read_mem(&self, addr: usize) -> u16 {
+        self.memory[addr]
+    }
+
+    fn write_mem(&mut self, addr: usize, val: u16) {
+        self.memory[addr] = val;
+    }
+
+    fn read_register(&self, addr: usize) -> u16 {
+        self.registers[addr]
+    }
+
+    fn write_register(&mut self, addr: usize, val: u16) {
+        self.registers[addr] = val;
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::Registers;
+    use crate::{Registers, VM};
 
     #[test]
     fn test_register_implicit_ordering() {
         assert_eq!(Registers::R0 as usize, 0);
         assert_eq!(Registers::R3 as usize, 3);
         assert_eq!(Registers::PC as usize, 8);
+    }
+
+    #[test]
+    fn test_vm_manipulation() {
+        let mut vm = VM::init();
+        assert_eq!(vm.read_mem(0), 0);
+        assert_eq!(vm.read_register(Registers::PC as usize), 0);
+        assert_eq!(vm.read_register(Registers::R0 as usize), 0);
+
+        vm.write_register(Registers::PC as usize, 15);
+        vm.write_mem(0, 16);
+        vm.write_register(Registers::PC as usize, 30);
+
+        assert_eq!(vm.read_mem(0), 16);
+        assert_eq!(vm.read_register(Registers::PC as usize), 30);
+        assert_eq!(vm.read_register(Registers::R0 as usize), 0);
     }
 }
