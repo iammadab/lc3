@@ -1,6 +1,7 @@
 /// Register Enum for readable reference
 /// 10 registers in total
 /// 8 general purpose registers (R0 - R7)
+///   - the general purpose registers can be addressed with 3 bits (log_2(8))
 /// 1 program counter (PC)
 /// 1 condition flag (COND)
 enum Registers {
@@ -92,9 +93,30 @@ impl VM {
     }
 }
 
+/// Sign Extension
+/// extends a binary value of a certain bit count to a larger bit count (u16 in this case)
+fn sext(val: u16, bit_count: usize) -> u16 {
+    // if the sign bit is 1, add 1's to the most significant part of the number
+    // NOTE: this does not change the 2's complement meaning
+
+    // bit_count represent the original length of the sequence
+    // right shift to erase all element other than first (bit_count - 1)
+    let sign_bit = val >> (bit_count - 1);
+
+    // if sign bit is a 1 (negative in 2's complement representation)
+    // pad most significant side with 1's
+    if sign_bit == 1 {
+        // left shift by bit_count to prevent corruption of original bit values
+        return val | (0xffff << bit_count);
+    }
+
+    // if not val already padded with 0's just return
+    val
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{Registers, VM};
+    use crate::{sext, Registers, VM};
 
     #[test]
     fn test_register_implicit_ordering() {
@@ -117,5 +139,11 @@ mod tests {
         assert_eq!(vm.read_mem(0), 16);
         assert_eq!(vm.read_register(Registers::PC as usize), 30);
         assert_eq!(vm.read_register(Registers::R0 as usize), 0);
+    }
+
+    #[test]
+    fn test_sign_extension() {
+        assert_eq!(sext(0b11111, 5), 0b1111111111111111);
+        assert_eq!(sext(0b01111, 5), 0b0000000000001111);
     }
 }
