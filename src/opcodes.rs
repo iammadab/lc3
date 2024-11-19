@@ -1,4 +1,5 @@
-use crate::{sext, update_flags, Flags, Register, VM};
+use crate::{sext, update_flags, Flags, Register, MEMORY_SIZE, VM};
+use std::io::{Read, Write};
 
 /// For complete opcode specification
 /// see: https://icourse.club/uploads/files/a9710bf2454961912f79d89b25ba33c4841f6c24.pdf
@@ -141,6 +142,78 @@ fn jsr_opcode(vm: &mut VM, instruction: u16) {
         let base = (instruction >> 6) & mask(3);
         *vm.reg_mut(Register::PC.into()) = vm.reg(base);
     }
+}
+
+// TODO: add documentation
+fn trap_opcode(vm: &mut VM, instruction: u16) {
+    let trap_code = instruction & mask(8);
+    match trap_code {
+        0x20 => trap_get_c(vm),
+        0x21 => trap_out(vm),
+        0x22 => trap_puts(vm),
+        0x23 => trap_in(vm),
+        0x24 => trap_putsp(vm),
+        0x25 => trap_halt(),
+        _ => unreachable!(),
+    }
+}
+
+/// Get character from the keyboard and store into R0
+fn trap_get_c(vm: &mut VM) {
+    let mut buffer = [0, 1];
+    std::io::stdin().read_exact(&mut buffer).unwrap();
+    *vm.reg_mut(Register::R0.into()) = buffer[0] as u16;
+    update_flags(vm, Register::R0.into());
+}
+
+/// Outputs a character
+fn trap_out(vm: &mut VM) {
+    println!("{}", vm.reg(Register::R0.into()) as u8 as char);
+}
+
+/// Starting from mem_addr = R0, print each cell as a character
+/// until last memory cell is reached or 0 is encountered
+fn trap_puts(vm: &mut VM) {
+    let mut mem_addr = vm.reg(Register::R0.into());
+    while mem_addr < MEMORY_SIZE as u16 {
+        let data = vm.mem(mem_addr);
+        if data == 0 {
+            break;
+        }
+
+        print!("{}", data as u8 as char);
+        mem_addr += 1;
+    }
+    std::io::stdout().flush().unwrap();
+}
+
+fn trap_in(vm: &mut VM) {
+    print!("Enter a character: ");
+    std::io::stdout().flush().unwrap();
+    *vm.reg_mut(Register::R0.into()) = std::io::stdin()
+        .bytes()
+        .next()
+        .and_then(|result| result.ok())
+        .map(|byte| byte as u16)
+        .unwrap();
+}
+
+/// Same as trap_puts but assumes two characters per word
+fn trap_putsp(vm: &mut VM) {
+    let mut mem_addr = vm.reg(Register::R0.into());
+    while mem_addr < MEMORY_SIZE as u16 {
+        let data = vm.mem(mem_addr);
+        let first_half = data & mask(8);
+        let second_half = data >> 8;
+
+        print!("{}{}", first_half as u8 as char, second_half as u8 as char);
+        mem_addr += 1;
+    }
+    std::io::stdout().flush().unwrap();
+}
+
+fn trap_halt() {
+    std::process::exit(0);
 }
 
 fn mask(n: u8) -> u16 {

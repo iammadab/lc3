@@ -43,6 +43,10 @@ enum Opcode {
     LDR,
     // store register
     STR,
+
+    // unused (add for proper instruction padding)
+    RTI,
+
     // bitwise not
     NOT,
     // load indirect
@@ -51,6 +55,10 @@ enum Opcode {
     STI,
     // jump
     JMP,
+
+    // unused (add for proper instruction padding)
+    RES,
+
     // load effective address
     LEA,
     // execute trap
