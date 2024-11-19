@@ -66,6 +66,14 @@ fn ldr_opcode(vm: &mut VM, instruction: u16) {
 }
 
 // TODO: add documentation
+fn lea_opcode(vm: &mut VM, instruction: u16) {
+    let dr = (instruction >> 9) & mask(3);
+    let pc_offset = sext(instruction & mask(9), 9);
+    *vm.reg_mut(dr) = vm.reg(Register::PC.into()) + pc_offset;
+    update_flags(vm, dr);
+}
+
+// TODO: add documentation
 fn st_opcode(vm: &mut VM, instruction: u16) {
     let sr = (instruction >> 9) & mask(3);
     let pc_offset = sext(instruction & mask(9), 9);
