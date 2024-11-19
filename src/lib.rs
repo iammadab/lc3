@@ -172,7 +172,7 @@ fn ldi(vm: &mut VM, instruction: u16) {
     let dr = (instruction >> 9) & mask(3);
     let pc_offset = sext(instruction & mask(9), 9);
     let mem_addr = pc_offset + vm.reg(Register::PC.into());
-    *vm.reg_mut(dr) = vm.mem(mem_addr);
+    *vm.reg_mut(dr) = vm.mem(vm.mem(mem_addr));
     update_flags(vm, dr);
 }
 
