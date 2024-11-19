@@ -114,6 +114,19 @@ fn sext(val: u16, bit_count: usize) -> u16 {
     val
 }
 
+/// Update Registers::COND based on the value at some register address
+fn update_flags(vm: &mut VM, register_addr: usize) {
+    let register_value = vm.read_register(register_addr);
+    let cond_state = if register_value == 0 {
+        Flags::ZERO
+    } else if register_value >> 15 == 1 {
+        Flags::NEG
+    } else {
+        Flags::POSITIVE
+    };
+    vm.write_register(Registers::COND as usize, cond_state as u16);
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{sext, Registers, VM};
