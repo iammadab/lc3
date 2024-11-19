@@ -149,11 +149,17 @@ fn trap_opcode(vm: &mut VM, instruction: u16) {
     todo!();
 }
 
+// TODO: add documentation
 fn trap_get_c(vm: &mut VM) {
     let mut buffer = [0, 1];
     std::io::stdin().read_exact(&mut buffer).unwrap();
     *vm.reg_mut(Register::R0.into()) = buffer[0] as u16;
     update_flags(vm, Register::R0.into());
+}
+
+// TODO: add documentation
+fn trap_out(vm: &mut VM) {
+    println!("{}", vm.reg(Register::R0.into()) as u8 as char);
 }
 
 fn mask(n: u8) -> u16 {
