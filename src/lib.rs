@@ -95,6 +95,14 @@ impl VM {
     fn reg_mut(&mut self, addr: u16) -> &mut u16 {
         &mut self.registers[addr as usize]
     }
+
+    fn mem(&self, addr: u16) -> u16 {
+        self.memory[addr as usize]
+    }
+
+    fn mem_mut(&mut self, addr: u16) -> &mut u16 {
+        &mut self.memory[addr as usize]
+    }
 }
 
 /// Sign Extension
@@ -162,17 +170,17 @@ mod tests {
     #[test]
     fn test_vm_manipulation() {
         let mut vm = VM::init();
-        assert_eq!(vm.read_mem(0), 0);
-        assert_eq!(vm.read_register(Registers::PC as usize), 0);
-        assert_eq!(vm.read_register(Registers::R0 as usize), 0);
+        assert_eq!(vm.mem(0), 0);
+        assert_eq!(vm.reg(Registers::PC.into()), 0);
+        assert_eq!(vm.reg(Registers::R0.into()), 0);
 
-        vm.write_register(Registers::PC as usize, 15);
-        vm.write_mem(0, 16);
-        vm.write_register(Registers::PC as usize, 30);
+        *vm.reg_mut(Registers::PC.into()) = 15;
+        *vm.mem_mut(0) = 16;
+        *vm.reg_mut(Registers::PC.into()) = 30;
 
-        assert_eq!(vm.read_mem(0), 16);
-        assert_eq!(vm.read_register(Registers::PC as usize), 30);
-        assert_eq!(vm.read_register(Registers::R0 as usize), 0);
+        assert_eq!(vm.mem(0), 16);
+        assert_eq!(vm.reg(Registers::PC.into()), 30);
+        assert_eq!(vm.reg(Registers::R0.into()), 0);
     }
 
     #[test]
