@@ -144,9 +144,18 @@ fn jsr_opcode(vm: &mut VM, instruction: u16) {
     }
 }
 
+// TODO: add documentation
 fn trap_opcode(vm: &mut VM, instruction: u16) {
     let trap_code = instruction & mask(8);
-    todo!();
+    match trap_code {
+        0x20 => trap_get_c(vm),
+        0x21 => trap_out(vm),
+        0x22 => trap_puts(vm),
+        0x23 => trap_in(vm),
+        0x24 => trap_putsp(vm),
+        0x25 => trap_halt(),
+        _ => unreachable!(),
+    }
 }
 
 /// Get character from the keyboard and store into R0
