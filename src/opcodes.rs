@@ -63,6 +63,14 @@ fn st_opcode(vm: &mut VM, instruction: u16) {
 }
 
 // TODO: add documentation
+fn sti_opcode(vm: &mut VM, instruction: u16) {
+    let sr = (instruction >> 9) & mask(3);
+    let pc_offset = sext(instruction & mask(9), 9);
+    let pointer_addr = pc_offset + vm.reg(Register::PC.into());
+    *vm.mem_mut(vm.mem(pointer_addr)) = vm.reg(sr);
+}
+
+// TODO: add documentation
 fn and_opcode(vm: &mut VM, instruction: u16) {
     let dr = (instruction >> 9) & mask(3);
     let sr1 = (instruction >> 6) & mask(3);
