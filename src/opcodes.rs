@@ -1,4 +1,4 @@
-use crate::{sext, update_flags, Flags, Register, VM};
+use crate::{sext, update_flags, Flags, Register, MEMORY_SIZE, VM};
 use std::io::{Read, Write};
 
 /// For complete opcode specification
@@ -162,8 +162,19 @@ fn trap_out(vm: &mut VM) {
     println!("{}", vm.reg(Register::R0.into()) as u8 as char);
 }
 
+/// Starting from mem_addr = R0, print each cell as a character
+/// until last memory cell is reached or 0 is encountered
 fn trap_puts(vm: &mut VM) {
-    todo!()
+    let mut mem_addr = vm.reg(Register::R0.into());
+    while mem_addr < MEMORY_SIZE as u16 {
+        let data = vm.mem(mem_addr);
+        if data == 0 {
+            break;
+        }
+
+        print!("{}", data as u8 as char);
+        mem_addr += 1;
+    }
 }
 
 fn trap_in(vm: &mut VM) {
