@@ -1,5 +1,5 @@
 use crate::{sext, update_flags, Flags, Register, VM};
-use std::io::Read;
+use std::io::{Read, Write};
 
 /// For complete opcode specification
 /// see: https://icourse.club/uploads/files/a9710bf2454961912f79d89b25ba33c4841f6c24.pdf
@@ -149,7 +149,7 @@ fn trap_opcode(vm: &mut VM, instruction: u16) {
     todo!();
 }
 
-// TODO: add documentation
+/// Get character from the keyboard and store into R0
 fn trap_get_c(vm: &mut VM) {
     let mut buffer = [0, 1];
     std::io::stdin().read_exact(&mut buffer).unwrap();
@@ -157,9 +157,32 @@ fn trap_get_c(vm: &mut VM) {
     update_flags(vm, Register::R0.into());
 }
 
-// TODO: add documentation
+/// Outputs a character
 fn trap_out(vm: &mut VM) {
     println!("{}", vm.reg(Register::R0.into()) as u8 as char);
+}
+
+fn trap_puts(vm: &mut VM) {
+    todo!()
+}
+
+fn trap_in(vm: &mut VM) {
+    print!("Enter a character: ");
+    std::io::stdout().flush().unwrap();
+    *vm.reg_mut(Register::R0.into()) = std::io::stdin()
+        .bytes()
+        .next()
+        .and_then(|result| result.ok())
+        .map(|byte| byte as u16)
+        .unwrap();
+}
+
+fn trap_putsp(vm: &mut VM) {
+    todo!()
+}
+
+fn trap_halt(vm: &mut VM) {
+    todo!()
 }
 
 fn mask(n: u8) -> u16 {
