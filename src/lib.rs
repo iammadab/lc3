@@ -4,7 +4,7 @@
 ///   - the general purpose registers can be addressed with 3 bits (log_2(8))
 /// 1 program counter (PC)
 /// 1 condition flag (COND)
-enum Registers {
+enum Register {
     R0,
     R1,
     R2,
@@ -17,14 +17,14 @@ enum Registers {
     COND,
 }
 
-impl From<Registers> for u16 {
-    fn from(value: Registers) -> Self {
+impl From<Register> for u16 {
+    fn from(value: Register) -> Self {
         value as u16
     }
 }
 
 /// Opcodes
-enum Opcodes {
+enum Opcode {
     // branch
     BR,
     // add
@@ -57,6 +57,12 @@ enum Opcodes {
     LEA,
     // execute trap
     TRAP,
+}
+
+impl From<Opcode> for u16 {
+    fn from(value: Opcode) -> Self {
+        value as u16
+    }
 }
 
 /// Conditional Flags
@@ -137,7 +143,7 @@ fn update_flags(vm: &mut VM, register_addr: u16) {
         Flags::POSITIVE
     };
 
-    *vm.reg_mut(Registers::COND.into()) = cond_state.into();
+    *vm.reg_mut(Register::COND.into()) = cond_state.into();
 }
 
 fn add(vm: &mut VM, instruction: u16) {
@@ -156,36 +162,81 @@ fn add(vm: &mut VM, instruction: u16) {
     update_flags(vm, dr);
 }
 
+// TODO: add documentation
+
 #[cfg(test)]
 mod tests {
-    use crate::{sext, Registers, VM};
+    use crate::{sext, Opcode, Register, VM};
+
+    // (instr_value, instr_bit_count)
+    type InstructionPart = (u16, u8);
+
+    const OPCODE_BIT_COUNT: u8 = 4;
+    const REGISTER_BIT_COUNT: u8 = 3;
+
+    fn encode_instruction(instr_parts: Vec<InstructionPart>) -> u16 {
+        let mut pad_count = 0;
+        let mut instruction = 0;
+        for (mut instr_part, instr_size) in instr_parts.into_iter().rev() {
+            let mask = (1 << instr_size) - 1;
+            instr_part &= mask;
+            instruction += instr_part << pad_count;
+            pad_count += instr_size;
+        }
+        instruction
+    }
+
+    fn encode_register(register: Register) -> InstructionPart {
+        (register.into(), REGISTER_BIT_COUNT)
+    }
+
+    fn encode_opcode(opcode: Opcode) -> InstructionPart {
+        (opcode.into(), OPCODE_BIT_COUNT)
+    }
 
     #[test]
     fn test_register_implicit_ordering() {
-        assert_eq!(Registers::R0 as usize, 0);
-        assert_eq!(Registers::R3 as usize, 3);
-        assert_eq!(Registers::PC as usize, 8);
+        assert_eq!(Register::R0 as usize, 0);
+        assert_eq!(Register::R3 as usize, 3);
+        assert_eq!(Register::PC as usize, 8);
     }
 
     #[test]
     fn test_vm_manipulation() {
         let mut vm = VM::init();
         assert_eq!(vm.mem(0), 0);
-        assert_eq!(vm.reg(Registers::PC.into()), 0);
-        assert_eq!(vm.reg(Registers::R0.into()), 0);
+        assert_eq!(vm.reg(Register::PC.into()), 0);
+        assert_eq!(vm.reg(Register::R0.into()), 0);
 
-        *vm.reg_mut(Registers::PC.into()) = 15;
+        *vm.reg_mut(Register::PC.into()) = 15;
         *vm.mem_mut(0) = 16;
-        *vm.reg_mut(Registers::PC.into()) = 30;
+        *vm.reg_mut(Register::PC.into()) = 30;
 
         assert_eq!(vm.mem(0), 16);
-        assert_eq!(vm.reg(Registers::PC.into()), 30);
-        assert_eq!(vm.reg(Registers::R0.into()), 0);
+        assert_eq!(vm.reg(Register::PC.into()), 30);
+        assert_eq!(vm.reg(Register::R0.into()), 0);
     }
 
     #[test]
     fn test_sign_extension() {
         assert_eq!(sext(0b11111, 5), 0b1111111111111111);
         assert_eq!(sext(0b01111, 5), 0b0000000000001111);
+    }
+
+    #[test]
+    fn test_encode_instruction() {
+        assert_eq!(encode_instruction(vec![(5, 3)]), 0b0000000000000101);
+        assert_eq!(encode_instruction(vec![(5, 3), (2, 2)]), 0b0000000000010110);
+        assert_eq!(
+            encode_instruction(vec![
+                encode_opcode(Opcode::ADD),
+                encode_register(Register::R0),
+                encode_register(Register::R1),
+                (0, 1),
+                (0, 2),
+                encode_register(Register::R2)
+            ]),
+            0b0001_000_001_0_00_010
+        );
     }
 }
