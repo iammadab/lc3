@@ -105,18 +105,18 @@ fn sext(val: u16, bit_count: usize) -> u16 {
 
     // if sign bit is a 1 (negative in 2's complement representation)
     // pad most significant side with 1's
-    if sign_bit & 1 {
+    if sign_bit == 1 {
         // left shift by bit_count to prevent corruption of original bit values
         return val | (0xffff << bit_count);
     }
 
-    // if not already padded with 0's just return
+    // if not val already padded with 0's just return
     val
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Registers, VM};
+    use crate::{sext, Registers, VM};
 
     #[test]
     fn test_register_implicit_ordering() {
@@ -139,5 +139,11 @@ mod tests {
         assert_eq!(vm.read_mem(0), 16);
         assert_eq!(vm.read_register(Registers::PC as usize), 30);
         assert_eq!(vm.read_register(Registers::R0 as usize), 0);
+    }
+
+    #[test]
+    fn test_sign_extension() {
+        assert_eq!(sext(0b11111, 5), 0b1111111111111111);
+        assert_eq!(sext(0b01111, 5), 0b0000000000001111);
     }
 }
