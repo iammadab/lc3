@@ -203,8 +203,8 @@ fn trap_putsp(vm: &mut VM) {
     std::io::stdout().flush().unwrap();
 }
 
-fn trap_halt(vm: &mut VM) {
-    todo!()
+fn trap_halt() {
+    std::process::exit(0);
 }
 
 fn mask(n: u8) -> u16 {
