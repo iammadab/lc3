@@ -37,17 +37,12 @@ fn ldi_opcode(vm: &mut VM, instruction: u16) {
 
 // TODO: add documentation
 fn br_opcode(vm: &mut VM, instruction: u16) {
-    let check_n = ((instruction >> 11) & mask(1)) == 1;
-    let check_z = ((instruction >> 10) & mask(1)) == 1;
-    let check_p = ((instruction >> 9) & mask(1)) == 1;
+    let expected_cond = (instruction >> 9) & mask(3);
     let pc_offset = sext(instruction & mask(9), 9);
 
     let cond_state = vm.reg(Register::COND.into());
 
-    if (check_n && cond_state == Flags::NEG.into())
-        || (check_p && cond_state == Flags::POSITIVE.into())
-        || (check_z && cond_state == Flags::ZERO.into())
-    {
+    if (expected_cond & cond_state) != 0 {
         *vm.reg_mut(Register::PC.into()) += pc_offset;
     }
 }
