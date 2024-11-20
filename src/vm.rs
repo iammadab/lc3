@@ -1,5 +1,4 @@
 use crate::decode_instruction::decode_instruction;
-use crate::opcodes;
 use crate::opcodes::{
     add_opcode, and_opcode, br_opcode, jmp_opcodee, jsr_opcode, ld_opcode, ldi_opcode, ldr_opcode,
     lea_opcode, not_opcode, st_opcode, sti_opcode, str_opcode, trap_opcode,
@@ -104,6 +103,10 @@ impl From<Flags> for u16 {
 
 pub const MEMORY_SIZE: usize = 1 << 16;
 pub const REGISTER_COUNT: usize = 10;
+
+// Memory Mapped Registers
+const MR_KBSR: u16 = 0xFE00; // keyboard status
+const MR_KBDR: u16 = 0xFE02; // keyboard status
 
 pub struct VM {
     memory: [u16; MEMORY_SIZE],
