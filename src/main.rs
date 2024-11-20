@@ -12,7 +12,7 @@ pub mod vm;
 fn main() {
     // Some tricks to make the VM's terminal be interactive
     let stdin = 0;
-    let termios = termios::Termios::from_fd(stdin).unwrap();
+    let termios = Termios::from_fd(stdin).unwrap();
 
     // make a mutable copy of termios
     // that we will modify
