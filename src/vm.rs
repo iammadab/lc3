@@ -1,4 +1,8 @@
-mod opcodes;
+use crate::opcodes;
+use crate::opcodes::{
+    add_opcode, and_opcode, br_opcode, jmp_opcodee, jsr_opcode, ld_opcode, ldi_opcode, ldr_opcode,
+    lea_opcode, not_opcode, st_opcode, sti_opcode, str_opcode, trap_opcode,
+};
 
 /// Register Enum for readable reference
 /// 10 registers in total
@@ -6,7 +10,7 @@ mod opcodes;
 ///   - the general purpose registers can be addressed with 3 bits (log_2(8))
 /// 1 program counter (PC)
 /// 1 condition flag (COND)
-enum Register {
+pub enum Register {
     R0,
     R1,
     R2,
@@ -26,7 +30,9 @@ impl From<Register> for u16 {
 }
 
 /// Opcodes
-enum Opcode {
+#[repr(u16)]
+#[derive(Debug)]
+pub enum Opcode {
     // branch
     BR,
     // add
@@ -71,6 +77,17 @@ impl From<Opcode> for u16 {
     }
 }
 
+impl TryFrom<u16> for Opcode {
+    type Error = &'static str;
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        if value <= 15 {
+            Ok(unsafe { std::mem::transmute(value) })
+        } else {
+            Err("invalid opcode")
+        }
+    }
+}
+
 /// Conditional Flags
 enum Flags {
     POSITIVE = 1 << 0,
@@ -84,42 +101,79 @@ impl From<Flags> for u16 {
     }
 }
 
-const MEMORY_SIZE: usize = 1 << 16;
-const REGISTER_COUNT: usize = 10;
+pub const MEMORY_SIZE: usize = 1 << 16;
+pub const REGISTER_COUNT: usize = 10;
 
-struct VM {
+pub struct VM {
     memory: [u16; MEMORY_SIZE],
     registers: [u16; REGISTER_COUNT],
+    running: bool,
 }
 
 impl VM {
-    fn init() -> Self {
+    pub fn init() -> Self {
         VM {
             memory: [0; MEMORY_SIZE],
             registers: [0; REGISTER_COUNT],
+            running: false,
         }
     }
 
-    fn reg(&self, addr: u16) -> u16 {
+    pub fn reg(&self, addr: u16) -> u16 {
         self.registers[addr as usize]
     }
 
-    fn reg_mut(&mut self, addr: u16) -> &mut u16 {
+    pub fn reg_mut(&mut self, addr: u16) -> &mut u16 {
         &mut self.registers[addr as usize]
     }
 
-    fn mem(&self, addr: u16) -> u16 {
+    pub fn mem(&self, addr: u16) -> u16 {
         self.memory[addr as usize]
     }
 
-    fn mem_mut(&mut self, addr: u16) -> &mut u16 {
+    pub fn mem_mut(&mut self, addr: u16) -> &mut u16 {
         &mut self.memory[addr as usize]
+    }
+
+    pub fn run(&mut self) {
+        self.running = true;
+
+        while self.running {
+            // fetch instruction
+            let instruction = *self.mem_mut(self.reg(Register::PC.into()));
+            let op = instruction >> 12;
+
+            // update pc
+            *self.reg_mut(Register::PC.into()) += 1;
+
+            // decode + execute
+            match Opcode::try_from(op).unwrap() {
+                Opcode::BR => br_opcode(self, instruction),
+                Opcode::ADD => add_opcode(self, instruction),
+                Opcode::LD => ld_opcode(self, instruction),
+                Opcode::ST => st_opcode(self, instruction),
+                Opcode::JSR => jsr_opcode(self, instruction),
+                Opcode::AND => and_opcode(self, instruction),
+                Opcode::LDR => ldr_opcode(self, instruction),
+                Opcode::STR => str_opcode(self, instruction),
+                Opcode::RTI => panic!("unused"),
+                Opcode::NOT => not_opcode(self, instruction),
+                Opcode::LDI => ldi_opcode(self, instruction),
+                Opcode::STI => sti_opcode(self, instruction),
+                Opcode::JMP => jmp_opcodee(self, instruction),
+                Opcode::RES => panic!("unused"),
+                Opcode::LEA => lea_opcode(self, instruction),
+                Opcode::TRAP => trap_opcode(self, instruction),
+            }
+
+            // self.running = false;
+        }
     }
 }
 
 /// Sign Extension
 /// extends a binary value of a certain bit count to a larger bit count (u16 in this case)
-fn sext(val: u16, bit_count: usize) -> u16 {
+pub fn sext(val: u16, bit_count: usize) -> u16 {
     // if the sign bit is 1, add 1's to the most significant part of the number
     // NOTE: this does not change the 2's complement meaning
 
@@ -139,7 +193,7 @@ fn sext(val: u16, bit_count: usize) -> u16 {
 }
 
 /// Update Registers::COND based on the value at some register address
-fn update_flags(vm: &mut VM, register_addr: u16) {
+pub fn update_flags(vm: &mut VM, register_addr: u16) {
     let register_value = vm.reg(register_addr);
     let cond_state = if register_value == 0 {
         Flags::ZERO
@@ -154,7 +208,8 @@ fn update_flags(vm: &mut VM, register_addr: u16) {
 
 #[cfg(test)]
 mod tests {
-    use crate::{sext, Opcode, Register, VM};
+    use crate::vm::sext;
+    use crate::{Register, VM};
 
     #[test]
     fn test_register_implicit_ordering() {
