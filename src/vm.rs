@@ -3,6 +3,7 @@ use crate::opcodes::{
     add_opcode, and_opcode, br_opcode, jmp_opcodee, jsr_opcode, ld_opcode, ldi_opcode, ldr_opcode,
     lea_opcode, not_opcode, st_opcode, sti_opcode, str_opcode, trap_opcode,
 };
+use std::io::Read;
 
 /// Register Enum for readable reference
 /// 10 registers in total
@@ -105,8 +106,8 @@ pub const MEMORY_SIZE: usize = 1 << 16;
 pub const REGISTER_COUNT: usize = 10;
 
 // Memory Mapped Registers
-const MR_KBSR: u16 = 0xFE00; // keyboard status
-const MR_KBDR: u16 = 0xFE02; // keyboard status
+const MR_KBSR: usize = 0xFE00; // keyboard status
+const MR_KBDR: usize = 0xFE02; // keyboard status
 
 pub struct VM {
     memory: [u16; MEMORY_SIZE],
@@ -131,7 +132,18 @@ impl VM {
         &mut self.registers[addr as usize]
     }
 
-    pub fn mem(&self, addr: u16) -> u16 {
+    pub fn mem(&mut self, addr: u16) -> u16 {
+        if addr == MR_KBSR as u16 {
+            let mut buffer = [0; 1];
+            std::io::stdin().read_exact(&mut buffer).unwrap();
+
+            if buffer[0] != 0 {
+                self.memory[MR_KBSR] = 1 << 15;
+                self.memory[MR_KBDR] = buffer[0] as u16;
+            } else {
+                self.memory[MR_KBSR] = 0;
+            }
+        }
         self.memory[addr as usize]
     }
 

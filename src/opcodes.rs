@@ -16,7 +16,8 @@ pub fn add_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 
 pub fn ldi_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
-    *vm.reg_mut(instruction.dr) = vm.mem(vm.mem(pointer_addr));
+    let pointer_data = vm.mem(pointer_addr);
+    *vm.reg_mut(instruction.dr) = vm.mem(pointer_data);
     update_flags(vm, instruction.dr);
 }
 
@@ -49,7 +50,8 @@ pub fn st_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 
 pub fn sti_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
-    *vm.mem_mut(vm.mem(pointer_addr)) = vm.reg(instruction.sr1);
+    let pointer_data = vm.mem(pointer_addr);
+    *vm.mem_mut(pointer_data) = vm.reg(instruction.sr1);
 }
 
 pub fn str_opcode(vm: &mut VM, instruction: DecodedInstruction) {
