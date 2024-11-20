@@ -216,7 +216,7 @@ fn trap_halt() {
     std::process::exit(0);
 }
 
-const fn mask(n: u8) -> u16 {
+pub const fn mask(n: u8) -> u16 {
     (1 << n) - 1
 }
 
