@@ -68,28 +68,18 @@ pub fn sti_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 
 // TODO: add documentation
 pub fn str_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let sr = (instruction >> 9) & mask(3);
-    let base = (instruction >> 6) & mask(3);
-    let base_offset = sext(instruction & mask(6), 6);
-    let mem_addr = vm.reg(base) + base_offset;
-    *vm.mem_mut(mem_addr) = vm.reg(sr);
+    let mem_addr = vm.reg(instruction.base_r) + instruction.offset;
+    *vm.mem_mut(mem_addr) = vm.reg(instruction.sr1);
 }
 
 // TODO: add documentation
 pub fn and_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let dr = (instruction >> 9) & mask(3);
-    let sr1 = (instruction >> 6) & mask(3);
-    let imm_flag = (instruction >> 5) & mask(1);
-
-    if imm_flag == 1 {
-        let imm5 = sext(instruction & mask(5), 5);
-        *vm.reg_mut(dr) = vm.reg(sr1) & imm5;
+    if instruction.flag == 1 {
+        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) & instruction.imm5;
     } else {
-        let sr2 = instruction & mask(3);
-        *vm.reg_mut(dr) = vm.reg(sr1) & vm.reg(sr2);
+        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) & vm.reg(instruction.sr2);
     }
-
-    update_flags(vm, dr);
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
