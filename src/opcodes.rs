@@ -23,11 +23,9 @@ pub fn add_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 // loads via a pointer, reads dr and pc_offset
 // pc_offset + pc point to mem that holds reference to actual data
 pub fn ldi_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let dr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    let pointer_addr = pc_offset + vm.reg(Register::PC.into());
-    *vm.reg_mut(dr) = vm.mem(vm.mem(pointer_addr));
-    update_flags(vm, dr);
+    let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
+    *vm.reg_mut(instruction.dr) = vm.mem(vm.mem(pointer_addr));
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
