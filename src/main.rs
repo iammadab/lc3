@@ -6,6 +6,7 @@ use std::io::{BufReader, Read};
 
 pub mod opcodes;
 pub mod vm;
+mod decode_instruction;
 
 fn main() {
     let path = "./src/programs/rogue.obj";
