@@ -66,3 +66,19 @@ fn decode_instruction(instruction: u16) -> DecodedInstruction {
 
     decoded_instruction
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::decode_instruction::decode_instruction;
+    use crate::vm::{Opcode, Register};
+
+    #[test]
+    fn test_instruction_decoding() {
+        let decoded_instruction = decode_instruction(0b0001_000_001_0_00_010);
+        assert_eq!(decoded_instruction.opcode, Opcode::ADD);
+        assert_eq!(decoded_instruction.dr, Register::R0.into());
+        assert_eq!(decoded_instruction.sr1, Register::R1.into());
+        assert_eq!(decoded_instruction.flag, 0); // register mode
+        assert_eq!(decoded_instruction.sr2, Register::R2.into());
+    }
+}
