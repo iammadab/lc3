@@ -1,26 +1,26 @@
 use crate::opcodes::mask;
 use crate::vm::{sext, Opcode, Register};
 
-struct DecodedInstruction {
-    opcode: Opcode,
+pub(crate) struct DecodedInstruction {
+    pub(crate) opcode: Opcode,
     // destination register
-    dr: u16,
+    pub(crate) dr: u16,
     // source register 1
-    sr1: u16,
+    pub(crate) sr1: u16,
     // source register 2
-    sr2: u16,
+    pub(crate) sr2: u16,
     // immediate value (5 bits + sign extended)
-    imm5: u16,
+    pub(crate) imm5: u16,
     // nzp (branch conditional flag)
-    nzp: u16,
+    pub(crate) nzp: u16,
     // base register
-    base_r: u16,
+    pub(crate) base_r: u16,
     // sign extended offset
-    offset: u16,
+    pub(crate) offset: u16,
     // trap code
-    trap_code: u16,
+    pub(crate) trap_code: u16,
     // flag
-    flag: u16,
+    pub(crate) flag: u16,
 }
 
 impl DecodedInstruction {
@@ -40,7 +40,7 @@ impl DecodedInstruction {
     }
 }
 
-fn decode_instruction(instruction: u16) -> DecodedInstruction {
+pub fn decode_instruction(instruction: u16) -> DecodedInstruction {
     let opcode = Opcode::try_from(instruction >> 12).expect("invalid instruction");
     let mut decoded_instruction = DecodedInstruction::init(opcode.clone());
 

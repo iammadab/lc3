@@ -1,3 +1,4 @@
+use crate::decode_instruction::DecodedInstruction;
 use crate::vm::{sext, update_flags, Register, MEMORY_SIZE, VM};
 use std::io::{Read, Write};
 
@@ -9,145 +10,104 @@ use std::io::{Read, Write};
 // Register Mode : ADD DR SR1 SR2 (DR = SR1 + SR2)
 // Immediate Mode: ADD DR SR1 IMM5 (DR = SR1 + IMM5)
 //  where imm5 is some constant from 0..=32
-pub fn add_opcode(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & mask(3);
-    let sr1 = (instruction >> 6) & mask(3);
-    let imm_flag = (instruction >> 5) & mask(1);
-
-    if imm_flag == 1 {
-        let imm5 = sext(instruction & mask(5), 5);
-        *vm.reg_mut(dr) = vm.reg(sr1) + imm5;
+pub fn add_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    if instruction.flag == 1 {
+        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) + instruction.imm5;
     } else {
-        let sr2 = instruction & mask(3);
-        *vm.reg_mut(dr) = vm.reg(sr1) + vm.reg(sr2);
+        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) + vm.reg(instruction.sr2);
     }
-
-    update_flags(vm, dr);
+    update_flags(vm, instruction.dr);
 }
 
 // Load Indirect
 // loads via a pointer, reads dr and pc_offset
 // pc_offset + pc point to mem that holds reference to actual data
-pub fn ldi_opcode(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    let pointer_addr = pc_offset + vm.reg(Register::PC.into());
-    *vm.reg_mut(dr) = vm.mem(vm.mem(pointer_addr));
-    update_flags(vm, dr);
+pub fn ldi_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
+    *vm.reg_mut(instruction.dr) = vm.mem(vm.mem(pointer_addr));
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
-pub fn br_opcode(vm: &mut VM, instruction: u16) {
-    let expected_cond = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-
+pub fn br_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let cond_state = vm.reg(Register::COND.into());
-
-    if (expected_cond & cond_state) != 0 {
-        *vm.reg_mut(Register::PC.into()) += pc_offset;
+    if (instruction.nzp & cond_state) != 0 {
+        *vm.reg_mut(Register::PC.into()) += instruction.offset;
     }
 }
 
 // TODO: add documentation
-pub fn ld_opcode(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    *vm.reg_mut(dr) = vm.mem(pc_offset + vm.reg(Register::PC.into()));
-    update_flags(vm, dr);
+pub fn ld_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    *vm.reg_mut(instruction.dr) = vm.mem(instruction.offset + vm.reg(Register::PC.into()));
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
-pub fn ldr_opcode(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & mask(3);
-    let base = (instruction >> 6) & mask(3);
-    let base_offset = sext(instruction & mask(6), 6);
-    let mem_addr = vm.reg(base) + base_offset;
-    *vm.reg_mut(dr) = vm.mem(mem_addr);
-    update_flags(vm, dr);
+pub fn ldr_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    let mem_addr = vm.reg(instruction.base_r) + instruction.offset;
+    *vm.reg_mut(instruction.dr) = vm.mem(mem_addr);
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
-pub fn lea_opcode(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    *vm.reg_mut(dr) = vm.reg(Register::PC.into()) + pc_offset;
-    update_flags(vm, dr);
+pub fn lea_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    *vm.reg_mut(instruction.dr) = vm.reg(Register::PC.into()) + instruction.offset;
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
-pub fn st_opcode(vm: &mut VM, instruction: u16) {
-    let sr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    *vm.mem_mut(vm.reg(Register::PC.into()) + pc_offset) = vm.reg(sr);
+pub fn st_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    *vm.mem_mut(vm.reg(Register::PC.into()) + instruction.offset) = vm.reg(instruction.sr1);
 }
 
 // TODO: add documentation
-pub fn sti_opcode(vm: &mut VM, instruction: u16) {
-    let sr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    let pointer_addr = pc_offset + vm.reg(Register::PC.into());
-    *vm.mem_mut(vm.mem(pointer_addr)) = vm.reg(sr);
+pub fn sti_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
+    *vm.mem_mut(vm.mem(pointer_addr)) = vm.reg(instruction.sr1);
 }
 
 // TODO: add documentation
-pub fn str_opcode(vm: &mut VM, instruction: u16) {
-    let sr = (instruction >> 9) & mask(3);
-    let base = (instruction >> 6) & mask(3);
-    let base_offset = sext(instruction & mask(6), 6);
-    let mem_addr = vm.reg(base) + base_offset;
-    *vm.mem_mut(mem_addr) = vm.reg(sr);
+pub fn str_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    let mem_addr = vm.reg(instruction.base_r) + instruction.offset;
+    *vm.mem_mut(mem_addr) = vm.reg(instruction.sr1);
 }
 
 // TODO: add documentation
-pub fn and_opcode(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & mask(3);
-    let sr1 = (instruction >> 6) & mask(3);
-    let imm_flag = (instruction >> 5) & mask(1);
-
-    if imm_flag == 1 {
-        let imm5 = sext(instruction & mask(5), 5);
-        *vm.reg_mut(dr) = vm.reg(sr1) & imm5;
+pub fn and_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    if instruction.flag == 1 {
+        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) & instruction.imm5;
     } else {
-        let sr2 = instruction & mask(3);
-        *vm.reg_mut(dr) = vm.reg(sr1) & vm.reg(sr2);
+        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) & vm.reg(instruction.sr2);
     }
-
-    update_flags(vm, dr);
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
-pub fn not_opcode(vm: &mut VM, instruction: u16) {
-    let dr = (instruction >> 9) & mask(3);
-    let sr = (instruction >> 6) & mask(3);
-    *vm.reg_mut(dr) = !sr;
-    update_flags(vm, dr);
+pub fn not_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    *vm.reg_mut(instruction.dr) = !instruction.sr1;
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
-pub fn jmp_opcodee(vm: &mut VM, instruction: u16) {
-    let base = (instruction >> 6) & mask(3);
-    *vm.reg_mut(Register::PC.into()) = vm.reg(base);
+pub fn jmp_opcodee(vm: &mut VM, instruction: DecodedInstruction) {
+    *vm.reg_mut(Register::PC.into()) = vm.reg(instruction.base_r);
 }
 
 // TODO: add documentation
-pub fn jsr_opcode(vm: &mut VM, instruction: u16) {
+pub fn jsr_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     *vm.reg_mut(Register::R7.into()) = vm.reg(Register::PC.into());
-    let mode = (instruction >> 11) & mask(1);
-    if mode == 1 {
+    if instruction.flag == 1 {
         // JSR
-        let pc_offset = sext(instruction & mask(11), 11);
-        *vm.reg_mut(Register::PC.into()) += pc_offset;
+        *vm.reg_mut(Register::PC.into()) += instruction.offset;
     } else {
         // JSSR
-        let base = (instruction >> 6) & mask(3);
-        *vm.reg_mut(Register::PC.into()) = vm.reg(base);
+        *vm.reg_mut(Register::PC.into()) = vm.reg(instruction.base_r);
     }
 }
 
 // TODO: add documentation
-pub fn trap_opcode(vm: &mut VM, instruction: u16) {
-    let trap_code = instruction & mask(8);
-    match trap_code {
+pub fn trap_opcode(vm: &mut VM, instruction: DecodedInstruction) {
+    match instruction.trap_code {
         0x20 => trap_get_c(vm),
         0x21 => trap_out(vm),
         0x22 => trap_puts(vm),
@@ -222,6 +182,7 @@ pub const fn mask(n: u8) -> u16 {
 
 #[cfg(test)]
 mod tests {
+    use crate::decode_instruction::decode_instruction;
     use crate::opcodes::{add_opcode, ldi_opcode, mask};
     use crate::vm::{Opcode, Register, VM};
 
@@ -299,9 +260,9 @@ mod tests {
             encode_imm5(7),
         ]);
 
-        add_opcode(&mut vm, instr_1);
+        add_opcode(&mut vm, decode_instruction(instr_1));
         assert_eq!(vm.reg(Register::R2.into()), 9);
-        add_opcode(&mut vm, instr_2);
+        add_opcode(&mut vm, decode_instruction(instr_2));
         assert_eq!(vm.reg(Register::R2.into()), 11);
     }
 
@@ -327,7 +288,7 @@ mod tests {
         ]);
 
         assert_eq!(vm.reg(Register::R2.into()), 0);
-        ldi_opcode(&mut vm, instr);
+        ldi_opcode(&mut vm, decode_instruction(instr));
         assert_eq!(vm.reg(Register::R2.into()), 42);
     }
 }
