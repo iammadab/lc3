@@ -30,55 +30,40 @@ pub fn ldi_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 
 // TODO: add documentation
 pub fn br_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let expected_cond = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-
     let cond_state = vm.reg(Register::COND.into());
-
-    if (expected_cond & cond_state) != 0 {
-        *vm.reg_mut(Register::PC.into()) += pc_offset;
+    if (instruction.nzp & cond_state) != 0 {
+        *vm.reg_mut(Register::PC.into()) += instruction.offset;
     }
 }
 
 // TODO: add documentation
 pub fn ld_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let dr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    *vm.reg_mut(dr) = vm.mem(pc_offset + vm.reg(Register::PC.into()));
-    update_flags(vm, dr);
+    *vm.reg_mut(instruction.dr) = vm.mem(instruction.offset + vm.reg(Register::PC.into()));
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
 pub fn ldr_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let dr = (instruction >> 9) & mask(3);
-    let base = (instruction >> 6) & mask(3);
-    let base_offset = sext(instruction & mask(6), 6);
-    let mem_addr = vm.reg(base) + base_offset;
-    *vm.reg_mut(dr) = vm.mem(mem_addr);
-    update_flags(vm, dr);
+    let mem_addr = vm.reg(instruction.base_r) + instruction.offset;
+    *vm.reg_mut(instruction.dr) = vm.mem(mem_addr);
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
 pub fn lea_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let dr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    *vm.reg_mut(dr) = vm.reg(Register::PC.into()) + pc_offset;
-    update_flags(vm, dr);
+    *vm.reg_mut(instruction.dr) = vm.reg(Register::PC.into()) + instruction.offset;
+    update_flags(vm, instruction.dr);
 }
 
 // TODO: add documentation
 pub fn st_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let sr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    *vm.mem_mut(vm.reg(Register::PC.into()) + pc_offset) = vm.reg(sr);
+    *vm.mem_mut(vm.reg(Register::PC.into()) + instruction.offset) = vm.reg(instruction.sr1);
 }
 
 // TODO: add documentation
 pub fn sti_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let sr = (instruction >> 9) & mask(3);
-    let pc_offset = sext(instruction & mask(9), 9);
-    let pointer_addr = pc_offset + vm.reg(Register::PC.into());
-    *vm.mem_mut(vm.mem(pointer_addr)) = vm.reg(sr);
+    let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
+    *vm.mem_mut(vm.mem(pointer_addr)) = vm.reg(instruction.sr1);
 }
 
 // TODO: add documentation
