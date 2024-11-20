@@ -1,12 +1,10 @@
-mod opcodes;
-
 /// Register Enum for readable reference
 /// 10 registers in total
 /// 8 general purpose registers (R0 - R7)
 ///   - the general purpose registers can be addressed with 3 bits (log_2(8))
 /// 1 program counter (PC)
 /// 1 condition flag (COND)
-enum Register {
+pub enum Register {
     R0,
     R1,
     R2,
@@ -26,7 +24,7 @@ impl From<Register> for u16 {
 }
 
 /// Opcodes
-enum Opcode {
+pub enum Opcode {
     // branch
     BR,
     // add
@@ -84,42 +82,42 @@ impl From<Flags> for u16 {
     }
 }
 
-const MEMORY_SIZE: usize = 1 << 16;
-const REGISTER_COUNT: usize = 10;
+pub const MEMORY_SIZE: usize = 1 << 16;
+pub const REGISTER_COUNT: usize = 10;
 
-struct VM {
+pub struct VM {
     memory: [u16; MEMORY_SIZE],
     registers: [u16; REGISTER_COUNT],
 }
 
 impl VM {
-    fn init() -> Self {
+    pub fn init() -> Self {
         VM {
             memory: [0; MEMORY_SIZE],
             registers: [0; REGISTER_COUNT],
         }
     }
 
-    fn reg(&self, addr: u16) -> u16 {
+    pub fn reg(&self, addr: u16) -> u16 {
         self.registers[addr as usize]
     }
 
-    fn reg_mut(&mut self, addr: u16) -> &mut u16 {
+    pub fn reg_mut(&mut self, addr: u16) -> &mut u16 {
         &mut self.registers[addr as usize]
     }
 
-    fn mem(&self, addr: u16) -> u16 {
+    pub fn mem(&self, addr: u16) -> u16 {
         self.memory[addr as usize]
     }
 
-    fn mem_mut(&mut self, addr: u16) -> &mut u16 {
+    pub fn mem_mut(&mut self, addr: u16) -> &mut u16 {
         &mut self.memory[addr as usize]
     }
 }
 
 /// Sign Extension
 /// extends a binary value of a certain bit count to a larger bit count (u16 in this case)
-fn sext(val: u16, bit_count: usize) -> u16 {
+pub fn sext(val: u16, bit_count: usize) -> u16 {
     // if the sign bit is 1, add 1's to the most significant part of the number
     // NOTE: this does not change the 2's complement meaning
 
@@ -139,7 +137,7 @@ fn sext(val: u16, bit_count: usize) -> u16 {
 }
 
 /// Update Registers::COND based on the value at some register address
-fn update_flags(vm: &mut VM, register_addr: u16) {
+pub fn update_flags(vm: &mut VM, register_addr: u16) {
     let register_value = vm.reg(register_addr);
     let cond_state = if register_value == 0 {
         Flags::ZERO
@@ -154,7 +152,8 @@ fn update_flags(vm: &mut VM, register_addr: u16) {
 
 #[cfg(test)]
 mod tests {
-    use crate::{sext, Opcode, Register, VM};
+    use crate::{Register, VM};
+    use crate::vm::sext;
 
     #[test]
     fn test_register_implicit_ordering() {

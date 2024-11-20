@@ -1,4 +1,4 @@
-use crate::{sext, update_flags, Flags, Register, MEMORY_SIZE, VM};
+use crate::vm::{sext, update_flags, Register, MEMORY_SIZE, VM};
 use std::io::{Read, Write};
 
 /// For complete opcode specification
@@ -216,14 +216,14 @@ fn trap_halt() {
     std::process::exit(0);
 }
 
-fn mask(n: u8) -> u16 {
+const fn mask(n: u8) -> u16 {
     (1 << n) - 1
 }
 
 #[cfg(test)]
 mod tests {
     use crate::opcodes::{add_opcode, ldi_opcode, mask};
-    use crate::{Opcode, Register, VM};
+    use crate::vm::{Opcode, Register, VM};
 
     // (instr_value, instr_bit_count)
     type InstructionPart = (u16, u8);
