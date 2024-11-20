@@ -31,7 +31,7 @@ impl From<Register> for u16 {
 
 /// Opcodes
 #[repr(u16)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Opcode {
     // branch
     BR,
