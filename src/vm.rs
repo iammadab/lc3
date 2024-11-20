@@ -1,3 +1,9 @@
+use crate::opcodes;
+use crate::opcodes::{
+    add_opcode, and_opcode, br_opcode, jmp_opcodee, jsr_opcode, ld_opcode, ldi_opcode, ldr_opcode,
+    lea_opcode, not_opcode, st_opcode, sti_opcode, str_opcode, trap_opcode,
+};
+
 /// Register Enum for readable reference
 /// 10 registers in total
 /// 8 general purpose registers (R0 - R7)
@@ -24,6 +30,8 @@ impl From<Register> for u16 {
 }
 
 /// Opcodes
+#[repr(u16)]
+#[derive(Debug)]
 pub enum Opcode {
     // branch
     BR,
@@ -69,6 +77,17 @@ impl From<Opcode> for u16 {
     }
 }
 
+impl TryFrom<u16> for Opcode {
+    type Error = &'static str;
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        if value <= 15 {
+            Ok(unsafe { std::mem::transmute(value) })
+        } else {
+            Err("invalid opcode")
+        }
+    }
+}
+
 /// Conditional Flags
 enum Flags {
     POSITIVE = 1 << 0,
@@ -88,6 +107,7 @@ pub const REGISTER_COUNT: usize = 10;
 pub struct VM {
     memory: [u16; MEMORY_SIZE],
     registers: [u16; REGISTER_COUNT],
+    running: bool,
 }
 
 impl VM {
@@ -95,6 +115,7 @@ impl VM {
         VM {
             memory: [0; MEMORY_SIZE],
             registers: [0; REGISTER_COUNT],
+            running: false,
         }
     }
 
@@ -112,6 +133,41 @@ impl VM {
 
     pub fn mem_mut(&mut self, addr: u16) -> &mut u16 {
         &mut self.memory[addr as usize]
+    }
+
+    pub fn run(&mut self) {
+        self.running = true;
+
+        while self.running {
+            // fetch instruction
+            let instruction = *self.mem_mut(self.reg(Register::PC.into()));
+            let op = instruction >> 12;
+
+            // update pc
+            *self.reg_mut(Register::PC.into()) += 1;
+
+            // decode + execute
+            match Opcode::try_from(op).unwrap() {
+                Opcode::BR => br_opcode(self, instruction),
+                Opcode::ADD => add_opcode(self, instruction),
+                Opcode::LD => ld_opcode(self, instruction),
+                Opcode::ST => st_opcode(self, instruction),
+                Opcode::JSR => jsr_opcode(self, instruction),
+                Opcode::AND => and_opcode(self, instruction),
+                Opcode::LDR => ldr_opcode(self, instruction),
+                Opcode::STR => str_opcode(self, instruction),
+                Opcode::RTI => panic!("unused"),
+                Opcode::NOT => not_opcode(self, instruction),
+                Opcode::LDI => ldi_opcode(self, instruction),
+                Opcode::STI => sti_opcode(self, instruction),
+                Opcode::JMP => jmp_opcodee(self, instruction),
+                Opcode::RES => panic!("unused"),
+                Opcode::LEA => lea_opcode(self, instruction),
+                Opcode::TRAP => trap_opcode(self, instruction),
+            }
+
+            self.running = false;
+        }
     }
 }
 
@@ -152,8 +208,8 @@ pub fn update_flags(vm: &mut VM, register_addr: u16) {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Register, VM};
     use crate::vm::sext;
+    use crate::{Register, VM};
 
     #[test]
     fn test_register_implicit_ordering() {

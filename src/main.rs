@@ -32,6 +32,8 @@ fn main() {
             }
         }
     }
+
+    vm.run();
 }
 
 fn read_u16(f: &mut BufReader<File>) -> io::Result<u16> {
