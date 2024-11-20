@@ -4,9 +4,9 @@ use std::io;
 use std::io::ErrorKind::UnexpectedEof;
 use std::io::{BufReader, Read};
 
+mod decode_instruction;
 pub mod opcodes;
 pub mod vm;
-mod decode_instruction;
 
 fn main() {
     let path = "./src/programs/rogue.obj";

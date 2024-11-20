@@ -17,5 +17,27 @@ struct DecodedInstruction {
     // sign extended offset
     offset: u16,
     // trap code
-    trap_code: u16
+    trap_code: u16,
+}
+
+impl DecodedInstruction {
+    fn init(opcode: Opcode) -> Self {
+        Self {
+            opcode,
+            dr: 0,
+            sr1: 0,
+            sr2: 0,
+            imm5: 0,
+            nzp: 0,
+            base_r: 0,
+            offset: 0,
+            trap_code: 0,
+        }
+    }
+}
+
+fn decode_instruction(instruction: u16) -> DecodedInstruction {
+    let opcode = Opcode::try_from(instruction >> 12).expect("invalid instruction");
+    let mut decoded_instruction = DecodedInstruction::init(opcode);
+    decoded_instruction
 }
