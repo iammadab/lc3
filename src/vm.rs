@@ -1,3 +1,4 @@
+use crate::decode_instruction::decode_instruction;
 use crate::opcodes;
 use crate::opcodes::{
     add_opcode, and_opcode, br_opcode, jmp_opcodee, jsr_opcode, ld_opcode, ldi_opcode, ldr_opcode,
@@ -141,32 +142,32 @@ impl VM {
         while self.running {
             // fetch instruction
             let instruction = *self.mem_mut(self.reg(Register::PC.into()));
-            let op = instruction >> 12;
+
+            // decode instruction
+            let decoded_instruction = decode_instruction(instruction);
 
             // update pc
             *self.reg_mut(Register::PC.into()) += 1;
 
-            // decode + execute
-            match Opcode::try_from(op).unwrap() {
-                Opcode::BR => br_opcode(self, instruction),
-                Opcode::ADD => add_opcode(self, instruction),
-                Opcode::LD => ld_opcode(self, instruction),
-                Opcode::ST => st_opcode(self, instruction),
-                Opcode::JSR => jsr_opcode(self, instruction),
-                Opcode::AND => and_opcode(self, instruction),
-                Opcode::LDR => ldr_opcode(self, instruction),
-                Opcode::STR => str_opcode(self, instruction),
+            // execute
+            match decoded_instruction.opcode {
+                Opcode::BR => br_opcode(self, decoded_instruction),
+                Opcode::ADD => add_opcode(self, decoded_instruction),
+                Opcode::LD => ld_opcode(self, decoded_instruction),
+                Opcode::ST => st_opcode(self, decoded_instruction),
+                Opcode::JSR => jsr_opcode(self, decoded_instruction),
+                Opcode::AND => and_opcode(self, decoded_instruction),
+                Opcode::LDR => ldr_opcode(self, decoded_instruction),
+                Opcode::STR => str_opcode(self, decoded_instruction),
                 Opcode::RTI => panic!("unused"),
-                Opcode::NOT => not_opcode(self, instruction),
-                Opcode::LDI => ldi_opcode(self, instruction),
-                Opcode::STI => sti_opcode(self, instruction),
-                Opcode::JMP => jmp_opcodee(self, instruction),
+                Opcode::NOT => not_opcode(self, decoded_instruction),
+                Opcode::LDI => ldi_opcode(self, decoded_instruction),
+                Opcode::STI => sti_opcode(self, decoded_instruction),
+                Opcode::JMP => jmp_opcodee(self, decoded_instruction),
                 Opcode::RES => panic!("unused"),
-                Opcode::LEA => lea_opcode(self, instruction),
-                Opcode::TRAP => trap_opcode(self, instruction),
+                Opcode::LEA => lea_opcode(self, decoded_instruction),
+                Opcode::TRAP => trap_opcode(self, decoded_instruction),
             }
-
-            // self.running = false;
         }
     }
 }
