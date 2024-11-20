@@ -166,7 +166,7 @@ impl VM {
                 Opcode::TRAP => trap_opcode(self, instruction),
             }
 
-            self.running = false;
+            // self.running = false;
         }
     }
 }

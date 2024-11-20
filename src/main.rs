@@ -8,7 +8,7 @@ pub mod opcodes;
 pub mod vm;
 
 fn main() {
-    let path = "./src/programs/2048.obj";
+    let path = "./src/programs/rogue.obj";
     let f = File::open(path).unwrap();
     let mut f = BufReader::new(f);
 
