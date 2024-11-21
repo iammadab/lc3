@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use crate::opcodes::mask;
 use crate::vm::{sext, Opcode, Register};
 

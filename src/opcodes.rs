@@ -50,18 +50,18 @@ pub fn lea_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 
 pub fn st_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     *vm.mem_mut(vm.reg(Register::PC.into()).wrapping_add(instruction.offset)) =
-        vm.reg(instruction.sr1);
+        vm.reg(instruction.dr);
 }
 
 pub fn sti_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let pointer_addr = instruction.offset.wrapping_add(vm.reg(Register::PC.into()));
     let pointer_data = vm.mem(pointer_addr);
-    *vm.mem_mut(pointer_data) = vm.reg(instruction.sr1);
+    *vm.mem_mut(pointer_data) = vm.reg(instruction.dr);
 }
 
 pub fn str_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let mem_addr = vm.reg(instruction.base_r).wrapping_add(instruction.offset);
-    *vm.mem_mut(mem_addr) = vm.reg(instruction.sr1);
+    *vm.mem_mut(mem_addr) = vm.reg(instruction.dr);
 }
 
 pub fn and_opcode(vm: &mut VM, instruction: DecodedInstruction) {
@@ -78,7 +78,7 @@ pub fn not_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     update_flags(vm, instruction.dr);
 }
 
-pub fn jmp_opcodee(vm: &mut VM, instruction: DecodedInstruction) {
+pub fn jmp_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     *vm.reg_mut(Register::PC.into()) = vm.reg(instruction.base_r);
 }
 

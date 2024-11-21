@@ -8,6 +8,7 @@ use termios::*;
 pub mod decode_instruction;
 pub mod opcodes;
 pub mod vm;
+mod display;
 
 fn main() {
     // Some tricks to make the VM's terminal be interactive

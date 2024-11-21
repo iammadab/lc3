@@ -1,10 +1,11 @@
 use crate::decode_instruction::decode_instruction;
 use crate::opcodes::{
-    add_opcode, and_opcode, br_opcode, jmp_opcodee, jsr_opcode, ld_opcode, ldi_opcode, ldr_opcode,
+    add_opcode, and_opcode, br_opcode, jmp_opcode, jsr_opcode, ld_opcode, ldi_opcode, ldr_opcode,
     lea_opcode, not_opcode, st_opcode, sti_opcode, str_opcode, trap_opcode,
 };
 use std::io::Read;
 
+#[repr(u16)]
 /// Register Enum for readable reference
 /// 10 registers in total
 /// 8 general purpose registers (R0 - R7)
@@ -27,6 +28,17 @@ pub enum Register {
 impl From<Register> for u16 {
     fn from(value: Register) -> Self {
         value as u16
+    }
+}
+
+impl TryFrom<u16> for Register {
+    type Error = &'static str;
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
+        if value <= 15 {
+            Ok(unsafe { std::mem::transmute(value) })
+        } else {
+            Err("invalid opcode")
+        }
     }
 }
 
@@ -161,6 +173,8 @@ impl VM {
             // decode instruction
             let decoded_instruction = decode_instruction(instruction);
 
+            println!("{}", decoded_instruction);
+
             // update pc
             *self.reg_mut(Register::PC.into()) += 1;
 
@@ -178,7 +192,7 @@ impl VM {
                 Opcode::NOT => not_opcode(self, decoded_instruction),
                 Opcode::LDI => ldi_opcode(self, decoded_instruction),
                 Opcode::STI => sti_opcode(self, decoded_instruction),
-                Opcode::JMP => jmp_opcodee(self, decoded_instruction),
+                Opcode::JMP => jmp_opcode(self, decoded_instruction),
                 Opcode::RES => panic!("unused"),
                 Opcode::LEA => lea_opcode(self, decoded_instruction),
                 Opcode::TRAP => trap_opcode(self, decoded_instruction),
