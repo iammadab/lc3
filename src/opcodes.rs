@@ -74,7 +74,7 @@ pub fn and_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 }
 
 pub fn not_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    *vm.reg_mut(instruction.dr) = !instruction.sr1;
+    *vm.reg_mut(instruction.dr) = !vm.reg(instruction.sr1);
     update_flags(vm, instruction.dr);
 }
 
