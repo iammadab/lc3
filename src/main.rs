@@ -22,7 +22,7 @@ fn main() {
 
     tcsetattr(stdin, TCSANOW, &mut new_termios).unwrap();
 
-    let path = "./src/programs/rogue.obj";
+    let path = "./src/programs/hello-world.obj";
     let f = File::open(path).unwrap();
     let mut f = BufReader::new(f);
 
