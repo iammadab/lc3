@@ -24,7 +24,9 @@ fn main() {
 
     tcsetattr(stdin, TCSANOW, &mut new_termios).unwrap();
 
-    let path = "./src/programs/2048.obj";
+    let path = "./src/programs/hello-world.obj";
+    // let path = "./src/programs/2048.obj";
+    // let path = "./src/programs/rogue.obj";
     let f = File::open(path).unwrap();
     let mut f = BufReader::new(f);
 
@@ -36,8 +38,6 @@ fn main() {
     loop {
         match read_u16(&mut f) {
             Ok(instruction) => {
-                let m = decode_instruction(instruction);
-                println!("{}", m);
                 *vm.mem_mut(address) = instruction;
                 address += 1;
             }
