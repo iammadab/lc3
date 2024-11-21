@@ -7,15 +7,17 @@ use std::io::{Read, Write};
 
 pub fn add_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     if instruction.flag == 1 {
-        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) + instruction.imm5;
+        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1).wrapping_add(instruction.imm5);
     } else {
-        *vm.reg_mut(instruction.dr) = vm.reg(instruction.sr1) + vm.reg(instruction.sr2);
+        *vm.reg_mut(instruction.dr) = vm
+            .reg(instruction.sr1)
+            .wrapping_add(vm.reg(instruction.sr2));
     }
     update_flags(vm, instruction.dr);
 }
 
 pub fn ldi_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
+    let pointer_addr = instruction.offset.wrapping_add(vm.reg(Register::PC.into()));
     let pointer_data = vm.mem(pointer_addr);
     *vm.reg_mut(instruction.dr) = vm.mem(pointer_data);
     update_flags(vm, instruction.dr);
@@ -24,38 +26,41 @@ pub fn ldi_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 pub fn br_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let cond_state = vm.reg(Register::COND.into());
     if (instruction.nzp & cond_state) != 0 {
-        *vm.reg_mut(Register::PC.into()) += instruction.offset;
+        *vm.reg_mut(Register::PC.into()) =
+            vm.reg(Register::PC.into()).wrapping_add(instruction.offset);
     }
 }
 
 pub fn ld_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    *vm.reg_mut(instruction.dr) = vm.mem(instruction.offset + vm.reg(Register::PC.into()));
+    *vm.reg_mut(instruction.dr) =
+        vm.mem(instruction.offset.wrapping_add(vm.reg(Register::PC.into())));
     update_flags(vm, instruction.dr);
 }
 
 pub fn ldr_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let mem_addr = vm.reg(instruction.base_r) + instruction.offset;
+    let mem_addr = vm.reg(instruction.base_r).wrapping_add(instruction.offset);
     *vm.reg_mut(instruction.dr) = vm.mem(mem_addr);
     update_flags(vm, instruction.dr);
 }
 
 pub fn lea_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    *vm.reg_mut(instruction.dr) = vm.reg(Register::PC.into()) + instruction.offset;
+    *vm.reg_mut(instruction.dr) = vm.reg(Register::PC.into()).wrapping_add(instruction.offset);
     update_flags(vm, instruction.dr);
 }
 
 pub fn st_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    *vm.mem_mut(vm.reg(Register::PC.into()) + instruction.offset) = vm.reg(instruction.sr1);
+    *vm.mem_mut(vm.reg(Register::PC.into()).wrapping_add(instruction.offset)) =
+        vm.reg(instruction.sr1);
 }
 
 pub fn sti_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let pointer_addr = instruction.offset + vm.reg(Register::PC.into());
+    let pointer_addr = instruction.offset.wrapping_add(vm.reg(Register::PC.into()));
     let pointer_data = vm.mem(pointer_addr);
     *vm.mem_mut(pointer_data) = vm.reg(instruction.sr1);
 }
 
 pub fn str_opcode(vm: &mut VM, instruction: DecodedInstruction) {
-    let mem_addr = vm.reg(instruction.base_r) + instruction.offset;
+    let mem_addr = vm.reg(instruction.base_r).wrapping_add(instruction.offset);
     *vm.mem_mut(mem_addr) = vm.reg(instruction.sr1);
 }
 
@@ -81,10 +86,12 @@ pub fn jsr_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     *vm.reg_mut(Register::R7.into()) = vm.reg(Register::PC.into());
     if instruction.flag == 1 {
         // JSR
-        *vm.reg_mut(Register::PC.into()) += instruction.offset;
+        *vm.reg_mut(Register::PC.into()) =
+            vm.reg(Register::PC.into()).wrapping_add(instruction.offset);
     } else {
         // JSSR
-        *vm.reg_mut(Register::PC.into()) = vm.reg(instruction.base_r);
+        *vm.reg_mut(Register::PC.into()) =
+            vm.reg(Register::PC.into()).wrapping_add(instruction.base_r);
     }
 }
 
