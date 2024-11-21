@@ -124,14 +124,11 @@ fn trap_out(vm: &mut VM) {
 /// until last memory cell is reached or 0 is encountered
 fn trap_puts(vm: &mut VM) {
     let mut mem_addr = vm.reg(Register::R0.into());
-    while mem_addr < MEMORY_SIZE as u16 {
-        let data = vm.mem(mem_addr);
-        if data == 0 {
-            break;
-        }
-
+    let mut data = vm.mem(mem_addr);
+    while data != 0 {
         print!("{}", data as u8 as char);
         mem_addr += 1;
+        data = vm.mem(mem_addr);
     }
     std::io::stdout().flush().unwrap();
 }

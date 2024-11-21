@@ -35,7 +35,6 @@ fn main() {
     loop {
         match read_u16(&mut f) {
             Ok(instruction) => {
-                dbg!(instruction);
                 *vm.mem_mut(address) = instruction;
                 address += 1;
             }
