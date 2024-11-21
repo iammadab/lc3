@@ -50,18 +50,18 @@ pub fn lea_opcode(vm: &mut VM, instruction: DecodedInstruction) {
 
 pub fn st_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     *vm.mem_mut(vm.reg(Register::PC.into()).wrapping_add(instruction.offset)) =
-        vm.reg(instruction.sr1);
+        vm.reg(instruction.dr);
 }
 
 pub fn sti_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let pointer_addr = instruction.offset.wrapping_add(vm.reg(Register::PC.into()));
     let pointer_data = vm.mem(pointer_addr);
-    *vm.mem_mut(pointer_data) = vm.reg(instruction.sr1);
+    *vm.mem_mut(pointer_data) = vm.reg(instruction.dr);
 }
 
 pub fn str_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     let mem_addr = vm.reg(instruction.base_r).wrapping_add(instruction.offset);
-    *vm.mem_mut(mem_addr) = vm.reg(instruction.sr1);
+    *vm.mem_mut(mem_addr) = vm.reg(instruction.dr);
 }
 
 pub fn and_opcode(vm: &mut VM, instruction: DecodedInstruction) {
@@ -78,7 +78,7 @@ pub fn not_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     update_flags(vm, instruction.dr);
 }
 
-pub fn jmp_opcodee(vm: &mut VM, instruction: DecodedInstruction) {
+pub fn jmp_opcode(vm: &mut VM, instruction: DecodedInstruction) {
     *vm.reg_mut(Register::PC.into()) = vm.reg(instruction.base_r);
 }
 
@@ -117,21 +117,18 @@ fn trap_get_c(vm: &mut VM) {
 
 /// Outputs a character
 fn trap_out(vm: &mut VM) {
-    println!("{}", vm.reg(Register::R0.into()) as u8 as char);
+    print!("{}", vm.reg(Register::R0.into()) as u8 as char);
 }
 
 /// Starting from mem_addr = R0, print each cell as a character
 /// until last memory cell is reached or 0 is encountered
 fn trap_puts(vm: &mut VM) {
     let mut mem_addr = vm.reg(Register::R0.into());
-    while mem_addr < MEMORY_SIZE as u16 {
-        let data = vm.mem(mem_addr);
-        if data == 0 {
-            break;
-        }
-
+    let mut data = vm.mem(mem_addr);
+    while data != 0 {
         print!("{}", data as u8 as char);
         mem_addr += 1;
+        data = vm.mem(mem_addr);
     }
     std::io::stdout().flush().unwrap();
 }
