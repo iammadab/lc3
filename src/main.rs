@@ -4,6 +4,7 @@ use std::io;
 use std::io::ErrorKind::UnexpectedEof;
 use std::io::{BufReader, Read};
 use termios::*;
+use crate::decode_instruction::decode_instruction;
 
 pub mod decode_instruction;
 pub mod opcodes;
@@ -23,7 +24,8 @@ fn main() {
 
     tcsetattr(stdin, TCSANOW, &mut new_termios).unwrap();
 
-    let path = "./src/programs/hello-world.obj";
+    // let path = "./src/programs/rogue.obj";
+    let path = "../../experiments/LC-3-Rust/examples/2048.obj";
     let f = File::open(path).unwrap();
     let mut f = BufReader::new(f);
 
@@ -35,6 +37,8 @@ fn main() {
     loop {
         match read_u16(&mut f) {
             Ok(instruction) => {
+                let m = decode_instruction(instruction);
+                println!("{}", m);
                 *vm.mem_mut(address) = instruction;
                 address += 1;
             }

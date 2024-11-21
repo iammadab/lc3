@@ -119,7 +119,7 @@ pub const REGISTER_COUNT: usize = 10;
 
 // Memory Mapped Registers
 const MR_KBSR: usize = 0xFE00; // keyboard status
-const MR_KBDR: usize = 0xFE02; // keyboard status
+const MR_KBDR: usize = 0xFE02; // keyboard data
 
 pub struct VM {
     memory: [u16; MEMORY_SIZE],

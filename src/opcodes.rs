@@ -117,7 +117,7 @@ fn trap_get_c(vm: &mut VM) {
 
 /// Outputs a character
 fn trap_out(vm: &mut VM) {
-    println!("{}", vm.reg(Register::R0.into()) as u8 as char);
+    print!("{}", vm.reg(Register::R0.into()) as u8 as char);
 }
 
 /// Starting from mem_addr = R0, print each cell as a character
