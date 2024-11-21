@@ -1,5 +1,5 @@
 use crate::decode_instruction::DecodedInstruction;
-use crate::vm::{sext, update_flags, Register, MEMORY_SIZE, VM};
+use crate::vm::{update_flags, Register, MEMORY_SIZE, VM};
 use std::io::{Read, Write};
 
 /// For complete opcode specification
