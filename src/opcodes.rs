@@ -228,8 +228,7 @@ mod tests {
             encode_opcode(Opcode::ADD),
             encode_register(Register::R2),
             encode_register(Register::R3),
-            (0, 1),
-            (0, 2),
+            (0, 3),
             encode_register(Register::R4),
         ]);
 
@@ -272,5 +271,22 @@ mod tests {
         assert_eq!(vm.reg(Register::R2.into()), 0);
         ldi_opcode(&mut vm, decode_instruction(instr));
         assert_eq!(vm.reg(Register::R2.into()), 42);
+    }
+
+    #[test]
+    fn test_neg_addition() {
+        // add two numbers, one is negative
+        // 4 - 2 = 2
+
+        // init variables
+        let a: u16 = 4;
+        let b: u16 = 2;
+
+        // 00000010
+        // 11111101
+        // 11111110
+        let neg_b: u16 = !b + 1;
+        let c = a.wrapping_add(neg_b);
+        assert_eq!(c, b);
     }
 }
