@@ -173,8 +173,6 @@ impl VM {
             // decode instruction
             let decoded_instruction = decode_instruction(instruction);
 
-            // println!("{}", decoded_instruction);
-
             // update pc
             *self.reg_mut(Register::PC.into()) += 1;
 

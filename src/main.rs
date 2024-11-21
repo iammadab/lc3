@@ -24,8 +24,7 @@ fn main() {
 
     tcsetattr(stdin, TCSANOW, &mut new_termios).unwrap();
 
-    // let path = "./src/programs/rogue.obj";
-    let path = "../../experiments/LC-3-Rust/examples/2048.obj";
+    let path = "./src/programs/2048.obj";
     let f = File::open(path).unwrap();
     let mut f = BufReader::new(f);
 
