@@ -1,6 +1,6 @@
-use std::fmt::{Display, format, Formatter, Write};
 use crate::decode_instruction::DecodedInstruction;
 use crate::vm::{Opcode, Register};
+use std::fmt::{format, Display, Formatter, Write};
 
 impl Display for Opcode {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -20,7 +20,7 @@ impl Display for Opcode {
             Opcode::JMP => f.write_str("JMP"),
             Opcode::RES => f.write_str("RES"),
             Opcode::LEA => f.write_str("LEA"),
-            Opcode::TRAP => f.write_str("TRAP")
+            Opcode::TRAP => f.write_str("TRAP"),
         }
     }
 }
@@ -37,7 +37,7 @@ impl Display for Register {
             Register::R6 => f.write_str("R6"),
             Register::R7 => f.write_str("R7"),
             Register::PC => f.write_str("PC"),
-            Register::COND => f.write_str("COND")
+            Register::COND => f.write_str("COND"),
         }
     }
 }
@@ -47,9 +47,7 @@ impl Display for DecodedInstruction {
         let mut result = self.opcode.to_string();
 
         match self.opcode {
-            Opcode::BR => {
-                result += format!(" {:b} {}", self.nzp, self.offset).as_str()
-            }
+            Opcode::BR => result += format!(" {:b} {}", self.nzp, self.offset).as_str(),
             Opcode::ADD | Opcode::AND => {
                 result += format!(" {} {}", r(self.dr), r(self.sr1)).as_str();
                 if self.flag == 0 {
@@ -83,20 +81,16 @@ impl Display for DecodedInstruction {
             Opcode::JMP => {
                 result += format!(" {}", r(self.base_r)).as_str();
             }
-            Opcode::RES => {
-                result += "unused"
-            }
-            Opcode::TRAP => {
-                match self.trap_code {
-                    0x20 => result += " GETC",
-                    0x21 => result += " OUT",
-                    0x22 => result += " PUTS",
-                    0x23 => result += " IN",
-                    0x24 => result += " PUTSp",
-                    0x25 => result += " HALT",
-                    _ => result += "unrecognized"
-                }
-            }
+            Opcode::RES => result += "unused",
+            Opcode::TRAP => match self.trap_code {
+                0x20 => result += " GETC",
+                0x21 => result += " OUT",
+                0x22 => result += " PUTS",
+                0x23 => result += " IN",
+                0x24 => result += " PUTSp",
+                0x25 => result += " HALT",
+                _ => result += "unrecognized",
+            },
         }
 
         f.write_str(result.as_str())
