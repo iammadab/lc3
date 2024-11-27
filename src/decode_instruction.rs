@@ -1,6 +1,6 @@
-use std::fmt::{Display, Formatter};
 use crate::opcodes::mask;
 use crate::vm::{sext, Opcode, Register};
+use std::fmt::{Display, Formatter};
 
 pub(crate) struct DecodedInstruction {
     pub(crate) opcode: Opcode,

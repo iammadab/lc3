@@ -1,17 +1,27 @@
+use crate::cli::{Cli, Commands};
+use crate::decode_instruction::decode_instruction;
 use crate::vm::{Register, VM};
+use clap::Parser;
 use std::fs::File;
 use std::io;
 use std::io::ErrorKind::UnexpectedEof;
 use std::io::{BufReader, Read};
 use termios::*;
-use crate::decode_instruction::decode_instruction;
 
+mod cli;
 pub mod decode_instruction;
+mod display;
 pub mod opcodes;
 pub mod vm;
-mod display;
 
 fn main() {
+    let cli = Cli::parse();
+
+    let (path, execute) = match &cli.command {
+        Commands::Execute { path } => (path, true),
+        Commands::Disassemble { path } => (path, false),
+    };
+
     // Some tricks to make the VM's terminal be interactive
     let stdin = 0;
     let termios = Termios::from_fd(stdin).unwrap();
@@ -24,9 +34,6 @@ fn main() {
 
     tcsetattr(stdin, TCSANOW, &mut new_termios).unwrap();
 
-    let path = "./src/programs/hello-world.obj";
-    // let path = "./src/programs/2048.obj";
-    // let path = "./src/programs/rogue.obj";
     let f = File::open(path).unwrap();
     let mut f = BufReader::new(f);
 
@@ -38,6 +45,12 @@ fn main() {
     loop {
         match read_u16(&mut f) {
             Ok(instruction) => {
+                if !execute {
+                    // disassemble
+                    let decoded = decode_instruction(instruction);
+                    println!("{}", decoded);
+                }
+
                 *vm.mem_mut(address) = instruction;
                 address += 1;
             }
@@ -50,7 +63,9 @@ fn main() {
         }
     }
 
-    vm.run();
+    if execute {
+        vm.run();
+    }
 
     // reset the stdin to
     // original termios data
